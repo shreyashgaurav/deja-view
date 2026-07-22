@@ -8,10 +8,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options(-Wall -Wextra)
 
-add_library(dejaview_core src/version.cpp)
+add_library(dejaview_core src/version.cpp src/scanner.cpp)
 target_include_directories(dejaview_core PUBLIC include)
 
-add_executable(dejaview apps/cli/main.cpp)
+add_executable(dejaview_tests tests/version_test.cpp tests/scanner_test.cpp)
 target_link_libraries(dejaview PRIVATE dejaview_core)
 
 enable_testing()
