@@ -84,6 +84,7 @@ namespace dejaview {
             }
             //Recursively iterate from each root.
             fs::recursive_directory_iterator it(root, iter_opts, ec);
+            const fs::recursive_directory_iterator end;
             while (it != end) {
                 const fs:: directory_entry& entry = *it;
                 ++result.entries_visited;
