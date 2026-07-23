@@ -9,8 +9,7 @@
 
 #include <unistd.h>
 
-#include "../cmake-build-debug/_deps/googletest-src/googletest/include/gtest/gtest.h"
-
+#include <gtest/gtest.h>
 
 namespace fs = std :: filesystem;
 using dejaview::ImageFormat;
