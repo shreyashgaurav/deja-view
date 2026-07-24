@@ -2,6 +2,9 @@
 #include<dejaview/scanner.hpp> //scan_directories, ScanResult, FileEntry, ImageFormat
 #include<dejaview/version.hpp> //For versioning
 #include "dejaview/exact_dedup.hpp" //Duplicate finding : Filter 1 (Same size => FNV-1a)
+#include "dejaview/decoder.hpp"
+#include<chrono>
+
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
     //argv[0]: program name aleways
     //argv[1...]: directory
@@ -54,6 +57,23 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
         }
     }
 
+    // Stage 3: decode all images to thumbnails
+    const auto t0 = std::chrono::steady_clock::now();
+    std::size_t decoded = 0, failed = 0;
+    for (const auto& f : result.files) {
+        dejaview::Thumbnail thumb;
+        std::string err;
+        if (dejaview::decode_to_thumbnail(f.path, f.format, 32, 32, thumb, err)) { //32 x 32 thumbnails
+            ++decoded;
+        } else {
+            ++failed;
+        }
+    }
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - t0).count();
+    std::printf("\nDecoded %zu thumbnails (%zu failed) in %lld ms  (%.1f images/s)\n",
+                decoded, failed, static_cast<long long>(ms),
+                ms > 0 ? decoded * 1000.0 / ms : 0.0);
 
     return 0;
 }
