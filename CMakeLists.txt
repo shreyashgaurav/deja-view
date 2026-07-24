@@ -8,7 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options(-Wall -Wextra)
 
-add_library(dejaview_core src/version.cpp src/scanner.cpp)
+
+add_library(dejaview_core src/version.cpp src/scanner.cpp src/hashing.cpp src/exact_dedup.cpp)
 target_include_directories(dejaview_core PUBLIC include)
 
 add_executable(dejaview apps/cli/main.cpp)
@@ -20,7 +21,7 @@ FetchContent_Declare(googletest
   URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
-add_executable(dejaview_tests tests/version_test.cpp tests/scanner_test.cpp)
+add_executable(dejaview_tests tests/version_test.cpp tests/scanner_test.cpp tests/exact_dedup_test.cpp)
 target_link_libraries(dejaview_tests PRIVATE dejaview_core GTest::gtest_main)
 include(GoogleTest)
 gtest_discover_tests(dejaview_tests)

@@ -1,6 +1,7 @@
 #include<cstdio> //For printf
 #include<dejaview/scanner.hpp> //scan_directories, ScanResult, FileEntry, ImageFormat
 #include<dejaview/version.hpp> //For versioning
+#include "dejaview/exact_dedup.hpp" //Duplicate finding : Filter 1 (Same size => FNV-1a)
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
     //argv[0]: program name aleways
     //argv[1...]: directory
@@ -38,5 +39,21 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
             result.errors.front().path.string().c_str(),
             result.errors.front().message.c_str());
     }
+
+    const auto dupes = dejaview::find_exact_duplicates(result.files);
+    std :: printf("\nExact duplicate groups: %zu (%zu files hashed, %.1f MB read)\n",
+        dupes.groups.size(), dupes.files_hashed,
+        static_cast<double>(dupes.bytes_hashed) / (1024.0 * 1024.0));
+    std :: printf("Reclaimable Space: %.1f MB\n",
+        static_cast<double>(dupes.reclaimable_bytes) / (1024.0 * 1024.0));
+
+    for (const auto& group : dupes.groups) {
+        std :: printf("  group of %zu:\n", group.size());
+        for (std :: size_t idx : group) {
+            std :: printf("    %s\n", result.files[idx].path.string().c_str());
+        }
+    }
+
+
     return 0;
 }
