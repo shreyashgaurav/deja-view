@@ -3,6 +3,7 @@
 #include<dejaview/version.hpp> //For versioning
 #include "dejaview/exact_dedup.hpp" //Duplicate finding : Filter 1 (Same size => FNV-1a)
 #include "dejaview/decoder.hpp"
+#include "dejaview/phash.hpp"
 #include<chrono>
 
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
@@ -57,23 +58,37 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
         }
     }
 
-    // Stage 3: decode all images to thumbnails
-    const auto t0 = std::chrono::steady_clock::now();
-    std::size_t decoded = 0, failed = 0;
-    for (const auto& f : result.files) {
-        dejaview::Thumbnail thumb;
+    // Stage 3+4: decode + perceptual hashes
+    const auto t0 = std::chrono::steady_clock::now(); //current time
+    std::vector<dejaview::PerceptualHashes> hashes; //Storage for hashes for each image (3 hashes for each image)
+    std::vector<std::size_t> hashed_index;  // maps into result.files. For cases in which some image fails to be decoded
+    std::size_t failed = 0; //Counting failures
+    for (std::size_t i = 0; i < result.files.size(); ++i) {
+        dejaview::PerceptualHashes h; // Temp hash structure
         std::string err;
-        if (dejaview::decode_to_thumbnail(f.path, f.format, 32, 32, thumb, err)) { //32 x 32 thumbnails
-            ++decoded;
+        //COmpute hashes
+        if (dejaview::compute_hashes(result.files[i].path, result.files[i].format, h, err)) {
+            hashes.push_back(h);
+            hashed_index.push_back(i);
         } else {
             ++failed;
         }
     }
-    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::steady_clock::now() - t0).count();
-    std::printf("\nDecoded %zu thumbnails (%zu failed) in %lld ms  (%.1f images/s)\n",
-                decoded, failed, static_cast<long long>(ms),
-                ms > 0 ? decoded * 1000.0 / ms : 0.0);
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count(); //Timer stops
+    //Elapsed time
+    std::printf("\nHashed %zu images (%zu failed) in %lld ms  (%.1f images/s)\n",
+                hashes.size(), failed, static_cast<long long>(ms),
+                ms > 0 ? hashes.size() * 1000.0 / ms : 0.0);
+
+    // Quick brute-force near-duplicate peek (dHash distance <= 10).
+    // This is a preview of stage 5, not the real matcher.
+    //Will change this with a ML classifier
+    int near_pairs = 0;
+    for (std::size_t a = 0; a < hashes.size(); ++a)
+        for (std::size_t b = a + 1; b < hashes.size(); ++b)
+            if (dejaview::hamming_distance(hashes[a].dhash, hashes[b].dhash) <= 10)
+                ++near_pairs;
+    std::printf("Near-duplicate pairs (dHash <= 10): %d\n", near_pairs);
 
     return 0;
 }
