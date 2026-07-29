@@ -5,6 +5,7 @@
 #include "dejaview/decoder.hpp"
 #include "dejaview/phash.hpp"
 #include "dejaview/matcher.hpp"
+#include "dejaview/features.hpp"
 #include<chrono>
 
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
@@ -107,6 +108,28 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
         std::printf("  throughput: %.1f M comparisons/s\n",
                     match.comparisons / (m_ms * 1000.0));
     }
+
+    // Stage 6 (a) : per image features + pair features
+    std::vector<dejaview::ImageFeatures> img_feats(hashed_index.size());
+    std::size_t feat_failed = 0;
+    for (std::size_t k = 0; k < hashed_index.size(); ++k) {
+        const auto& fe = result.files[hashed_index[k]];
+        std::string err;
+        if (!dejaview::compute_image_features(fe.path, fe.format, fe.size_bytes,
+                                              img_feats[k], err)) {
+            ++feat_failed;
+                                              }
+    }
+
+    int colour_agree = 0;
+    for (const auto& p : match.pairs) {
+        const auto pf = dejaview::compute_pair_features(p, img_feats[p.a],
+                                                        img_feats[p.b]);
+        if (pf.hist_distance < 0.15f) ++colour_agree;
+    }
+    std::printf("\nImage features computed (%zu failed)\n", feat_failed);
+    std::printf("Candidates whose colours also agree (hist < 0.15): %d / %zu\n",
+                colour_agree, match.pairs.size());
 
     return 0;
 }

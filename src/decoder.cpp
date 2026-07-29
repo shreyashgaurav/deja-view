@@ -116,6 +116,70 @@ bool decode_jpeg_gray(const fs::path& p, int target_w, int target_h,
     std::fclose(f);
     return true;
 }
+// TODO: Redundancy here in this function. Merge the above and below function in one in the optimization pass
+// RGB variant of the above. Identical structure; the only real differences are
+// JCS_RGB instead of JCS_GRAYSCALE, and 3 bytes per pixel instead of 1.
+// We also record the ORIGINAL dimensions before the scaled decode shrinks them.
+// TODO: unify the gray/rgb paths - the setjmp boilerplate is duplicated
+bool decode_jpeg_rgb(const fs::path& p, int target_w, int target_h,
+                     ColorThumbnail& out, std::string& error) {
+    FILE* f = std::fopen(p.string().c_str(), "rb");
+    if (!f) {
+        error = "cannot open";
+        return false;
+    }
+
+    jpeg_decompress_struct cinfo{};
+    JpegErrorMgr jerr{};
+    cinfo.err = jpeg_std_error(&jerr.pub);
+    jerr.pub.error_exit = jpeg_error_exit;
+
+    if (setjmp(jerr.jump)) {
+        jpeg_destroy_decompress(&cinfo);
+        std::fclose(f);
+        error = "corrupt or unsupported JPEG";
+        return false;
+    }
+
+    jpeg_create_decompress(&cinfo);
+    jpeg_stdio_src(&cinfo, f);
+    jpeg_read_header(&cinfo, TRUE);
+
+    // Captured before scaled decode: these are the true source dimensions.
+    // After jpeg_start_decompress, output_width is the SHRUNKEN size, so using
+    // that would make every large JPEG look small to the dim_ratio feature.
+    out.source_width = static_cast<int>(cinfo.image_width);
+    out.source_height = static_cast<int>(cinfo.image_height);
+
+    cinfo.out_color_space = JCS_RGB;   // 3 channels, not 1
+
+    cinfo.scale_num = 1;
+    cinfo.scale_denom = 1;
+    while (cinfo.scale_denom < 8 &&
+           cinfo.image_width / (cinfo.scale_denom * 2) >=
+               static_cast<unsigned>(target_w) &&
+           cinfo.image_height / (cinfo.scale_denom * 2) >=
+               static_cast<unsigned>(target_h)) {
+        cinfo.scale_denom *= 2;
+    }
+
+    jpeg_start_decompress(&cinfo);
+    out.width = static_cast<int>(cinfo.output_width);
+    out.height = static_cast<int>(cinfo.output_height);
+    out.pixels.resize(static_cast<std::size_t>(out.width) * out.height * 3);
+
+    while (cinfo.output_scanline < cinfo.output_height) {
+        JSAMPROW row = out.pixels.data() +
+                       static_cast<std::size_t>(cinfo.output_scanline) *
+                           out.width * 3;
+        jpeg_read_scanlines(&cinfo, &row, 1);
+    }
+
+    jpeg_finish_decompress(&cinfo);
+    jpeg_destroy_decompress(&cinfo);
+    std::fclose(f);
+    return true;
+}
 
 // _______________ PNG
     //This function reads a PNG image from disk and converts it into a grayscale thumbnail
@@ -192,6 +256,73 @@ bool decode_png_gray(const fs::path& p, Thumbnail& out, std::string& error) {
     return true;
 }
 
+// TODO: Redundancy here in this function too. Merge the above and below function in one in the optimization pass
+// RGB variant. Note the inverted transformation: the gray path converts colour
+// DOWN to gray; here we expand gray UP to rgb so every PNG ends as 3 channels.
+bool decode_png_rgb(const fs::path& p, ColorThumbnail& out, std::string& error) {
+    FILE* f = std::fopen(p.string().c_str(), "rb");
+    if (!f) {
+        error = "cannot open";
+        return false;
+    }
+
+    png_structp png =
+        png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    png_infop info = png ? png_create_info_struct(png) : nullptr;
+    if (!png || !info) {
+        if (png) png_destroy_read_struct(&png, &info, nullptr);
+        std::fclose(f);
+        error = "libpng initialization failed";
+        return false;
+    }
+
+    std::vector<std::uint8_t> pix;
+    std::vector<png_bytep> rows;
+
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_read_struct(&png, &info, nullptr);
+        std::fclose(f);
+        error = "corrupt or unsupported PNG";
+        return false;
+    }
+
+    png_init_io(png, f);
+    png_read_info(png, info);
+
+    png_set_strip_16(png);
+    png_set_expand(png);
+    png_set_strip_alpha(png);
+    png_set_gray_to_rgb(png);   // grayscale PNGs become 3-channel too
+    png_read_update_info(png, info);
+
+    const int w = static_cast<int>(png_get_image_width(png, info));
+    const int h = static_cast<int>(png_get_image_height(png, info));
+    if (png_get_channels(png, info) != 3) {
+        png_destroy_read_struct(&png, &info, nullptr);
+        std::fclose(f);
+        error = "unexpected channel count after rgb conversion";
+        return false;
+    }
+
+    pix.resize(static_cast<std::size_t>(w) * h * 3);
+    rows.resize(static_cast<std::size_t>(h));
+    for (int y = 0; y < h; ++y) {
+        rows[static_cast<std::size_t>(y)] =
+            pix.data() + static_cast<std::size_t>(y) * w * 3;
+    }
+    png_read_image(png, rows.data());
+    png_read_end(png, nullptr);
+    png_destroy_read_struct(&png, &info, nullptr);
+    std::fclose(f);
+
+    out.width = w;
+    out.height = h;
+    out.source_width = w;    // PNG has no scaled-decode, so these are the same
+    out.source_height = h;
+    out.pixels = std::move(pix);
+    return true;
+}
+
 // _______________ resize ----
 // Box filter: each target pixel = average of its source rectangle.
 // Simple, fast, and exactly what perceptual hashing wants (area averaging).
@@ -222,6 +353,41 @@ void box_resize(const Thumbnail& src, int tw, int th, Thumbnail& out) {
     }
 }
 
+// TODO: Redundancy here in this function too. Merge the above and below function in one in the optimization pass
+// Box filter for RGB: same area-averaging as above, done once per channel.
+void box_resize_rgb(const ColorThumbnail& src, int tw, int th,
+                    ColorThumbnail& out) {
+    out.width = tw;
+    out.height = th;
+    out.source_width = src.source_width;    // carried through the resize
+    out.source_height = src.source_height;
+    out.pixels.assign(static_cast<std::size_t>(tw) * th * 3, 0);
+
+    for (int ty = 0; ty < th; ++ty) {
+        int y0 = ty * src.height / th;
+        int y1 = (ty + 1) * src.height / th;
+        if (y1 <= y0) y1 = y0 + 1;
+        for (int tx = 0; tx < tw; ++tx) {
+            int x0 = tx * src.width / tw;
+            int x1 = (tx + 1) * src.width / tw;
+            if (x1 <= x0) x1 = x0 + 1;
+            const unsigned count = static_cast<unsigned>((y1 - y0) * (x1 - x0));
+
+            for (int ch = 0; ch < 3; ++ch) {
+                unsigned sum = 0;
+                for (int y = y0; y < y1; ++y) {
+                    for (int x = x0; x < x1; ++x) {
+                        sum += src.pixels[
+                            (static_cast<std::size_t>(y) * src.width + x) * 3 + ch];
+                    }
+                }
+                out.pixels[(static_cast<std::size_t>(ty) * tw + tx) * 3 + ch] =
+                    static_cast<std::uint8_t>(sum / count);
+            }
+        }
+    }
+}
+
 }  // namespace
 
 
@@ -245,75 +411,25 @@ bool decode_to_thumbnail(const fs::path& p, const ImageFormat format, const int 
     return true;
 }
 
+//Colour orchestrator: same dispatch logic, RGB output
+bool decode_to_color_thumbnail(const fs::path& p, const ImageFormat format,
+                               const int target_w, const int target_h,
+                               ColorThumbnail& out, std::string& error) {
+    ColorThumbnail full;
+
+    const bool ok = (format == ImageFormat::Jpeg)
+                        ? decode_jpeg_rgb(p, target_w, target_h, full, error)
+                        : decode_png_rgb(p, full, error);
+    if (!ok) return false;
+
+    if (full.width == target_w && full.height == target_h) {
+        out = std::move(full);
+    } else {
+        box_resize_rgb(full, target_w, target_h, out);
+    }
+    return true;
+}
+
 }
 
 
-// #include "dejaview//decoder.hpp"
-// #include <csetjmp>
-// #include<cstdio>
-// #include <iostream>
-// #include<jpeglib.h>
-// #include<png.h>
-//
-// namespace fs = std::filesystem;
-// namespace dejaview {
-// namespace {
-//     struct JpegErrorMgr {
-//         jpeg_error_mgr pub;
-//         std :: jmp_buf jump;
-//     };
-//     void jpeg_error_exit(j_common_ptr cinfo) {
-//         auto* mgr = reinterpret_cast<JpegErrorMgr*>(cinfo->err);
-//         std::longjmp(mgr->jump, 1);
-//     }
-//     bool decode_jpeg_gray(const fs::path& p, int target_w, int target_h, Thumbnail& out, std::string& error) {
-//         FILE* f = std :: fopen(p.string().c_str(), "rb");
-//         if (!f) {
-//             error = "can not open file";
-//             return false;
-//         }
-//         jpeg_decompress_struct cinfo{};
-//         JpegErrorMgr jerr{};
-//         cinfo.err = jpeg_std_error(&jerr.pub);
-//         jerr.pub.error_exit = jpeg_error_exit;
-//         if (setjmp(jerr.jump)) {
-//             jpeg_destroy_decompress(&cinfo);
-//             std::fclose(f);
-//             error = "corrupt or unsuppported files";
-//             return false;
-//         }
-//         jpeg_create_decompress(&cinfo);
-//         jpeg_stdio_src(&cinfo, f);
-//         jpeg_read_header(&cinfo, TRUE);
-//
-//         cinfo.out_color_space = JCS_GRAYSCALE;
-//         cinfo.scale_num = 1;
-//         cinfo.scale_denom = 1;
-//         while (cinfo.scale_num < 8 &&
-//             cinfo.image_width / (cinfo.scale_num * 2) >= static_cast<unsigned>(target_w) &&
-//             cinfo.image_height / (cinfo.scale_num * 2) >= static_cast<unsigned>(target_h)) {
-//             cinfo.scale_num = 1;
-//             cinfo.scale_denom = 1;
-//             while (std::cinfo.scale_denom < 8 &&
-//                 cinfo.image_width / (cinfo.scale_num * 2) >= static_cast<unsigned>(target_w) &&
-//                 cinfo.image_height / (cinfo.scale_num * 2) >= static_cast<unsigned>(target_h)) {
-//                 cinfo.scale_denom *= 2;
-//             }
-//             jpeg_start_decompress(&cinfo);
-//             out.width = cinfo.output.output_width;
-//             out.height = cinfo.output.output_height;
-//             out.pixels.resize(static_cast<std::size_t>(out.width) * out.height);
-//
-//             while (cinfo.output_scanline < cinfo.output_height) {
-//                 JSAMPROW row = out.pixels.data() +
-//                     static_cast<std::size_t>(cinfo.output_scanline) * out.width;
-//                 jpeg_read_scanlines(&cinfo, row, 1);
-//             }
-//             jpeg_finish_decompress(&cinfo);
-//             jpeg_destroy_decompress(&cinfo);
-//             std::fclose(f);
-//             return true;
-//         }
-//     }
-// }
-// }
