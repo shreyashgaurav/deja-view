@@ -4,6 +4,7 @@
 #include "dejaview/exact_dedup.hpp" //Duplicate finding : Filter 1 (Same size => FNV-1a)
 #include "dejaview/decoder.hpp"
 #include "dejaview/phash.hpp"
+#include "dejaview/matcher.hpp"
 #include<chrono>
 
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
@@ -83,12 +84,29 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
     // Quick brute-force near-duplicate peek (dHash distance <= 10).
     // This is a preview of stage 5, not the real matcher.
     //Will change this with a ML classifier
-    int near_pairs = 0;
-    for (std::size_t a = 0; a < hashes.size(); ++a)
-        for (std::size_t b = a + 1; b < hashes.size(); ++b)
-            if (dejaview::hamming_distance(hashes[a].dhash, hashes[b].dhash) <= 10)
-                ++near_pairs;
-    std::printf("Near-duplicate pairs (dHash <= 10): %d\n", near_pairs);
+    //int near_pairs = 0;
+    //for (std::size_t a = 0; a < hashes.size(); ++a)
+    //    for (std::size_t b = a + 1; b < hashes.size(); ++b)
+    //        if (dejaview::hamming_distance(hashes[a].dhash, hashes[b].dhash) <= 10)
+    //            ++near_pairs;
+    //std::printf("Near-duplicate pairs (dHash <= 10): %d\n", near_pairs);
+
+    // Stage 5: candidate matchin
+    const auto m0 = std::chrono::steady_clock::now();
+    const auto match = dejaview::find_candidates(hashes);
+    const auto m_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::steady_clock::now() - m0).count();
+
+    std::printf("\nCandidate pairs: %zu  (from %llu comparisons in %lld ms)\n",
+                match.pairs.size(),
+                static_cast<unsigned long long>(match.comparisons),
+                static_cast<long long>(m_ms));
+    std::printf("  before cap: %zu, images hitting cap: %zu\n",
+                match.pairs_before_cap, match.images_capped);
+    if (m_ms > 0) {
+        std::printf("  throughput: %.1f M comparisons/s\n",
+                    match.comparisons / (m_ms * 1000.0));
+    }
 
     return 0;
 }
