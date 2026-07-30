@@ -388,6 +388,8 @@ void box_resize_rgb(const ColorThumbnail& src, int tw, int th,
     }
 }
 
+    //Hide the libpng warnings
+    void png_warning_noop(png_structp, png_const_charp) {}
 }  // namespace
 
 

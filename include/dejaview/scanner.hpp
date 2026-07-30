@@ -31,6 +31,11 @@ namespace dejaview {
         std:: size_t skipped_non_image = 0; //Ignored beacuse non - image
     };
 
+    // Identify a single file's format by magic bytes. Used by the feature
+    // exporter, which is handed explicit paths rather than scanning a tree.
+    bool detect_image_format(const std::filesystem::path& p, ImageFormat& out,
+                             std::string& error);
+
     //This function scans directories andd return ScanResult
     //Param 1: const std::vector<std::filesystem::path>& roots => A list of directories to scan.
     // const &: Pass by reference (for efficiency) and const so thet the function can't modify

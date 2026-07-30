@@ -33,9 +33,9 @@ namespace dejaview {
         // maximizes recall. Over-inclusion is intentional at this stage. Later we ll use ML classifier for a fine grained classifier
 
         //Why "ANY "? : The pair should survive even when only one hash agrees
-        int ahash_radius = 10;
-        int dhash_radius = 10;
-        int phash_radius = 12;
+        int ahash_radius = 16;
+        int dhash_radius = 16;
+        int phash_radius = 16;
 
         // Safety valve: keep at most this many candidates per image (its closest).
         // A pair survives if it is in the top-N of EITHER endpoint. 0 = unlimited.

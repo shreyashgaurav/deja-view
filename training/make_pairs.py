@@ -16,8 +16,7 @@ import argparse
 import csv
 import random
 from pathlib import Path
-
-from PIL import Image, ImageDraw, ImageEnhance
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 
 #Transformation seq
@@ -61,6 +60,43 @@ def t_topng(img, rng):
     return img, "png", {}
 
 
+# --- Harder transforms -----------------------------------------------------
+# These genuinely damage the perceptual hashes while preserving identity.
+# They are the cases where evidence CONFLICTS: hashes say "far apart", but
+# aspect ratio and colour histogram still say "same image". A single threshold
+# cannot resolve that conflict; a multi-feature classifier can.
+
+def t_crop15(img, rng):
+    w, h = img.size
+    dx, dy = int(w * 0.15), int(h * 0.15)
+    return img.crop((dx, dy, w - dx, h - dy)), "jpg", {"quality": 92}
+
+
+def t_crop25(img, rng):
+    w, h = img.size
+    dx, dy = int(w * 0.25), int(h * 0.25)
+    return img.crop((dx, dy, w - dx, h - dy)), "jpg", {"quality": 92}
+
+
+def t_rotate(img, rng):
+    angle = rng.choice([-6, -3, 3, 6])
+    return img.rotate(angle, expand=False, fillcolor=(0, 0, 0)), "jpg", {"quality": 92}
+
+
+def t_blur(img, rng):
+    return img.filter(ImageFilter.GaussianBlur(radius=2.0)), "jpg", {"quality": 92}
+
+
+def t_overlay_large(img, rng):
+    out = img.copy()
+    draw = ImageDraw.Draw(out)
+    w, h = out.size
+    # Covers roughly a quarter of the frame - a meme caption, a sticker, a logo.
+    draw.rectangle([0, 0, w, h // 4], fill=(240, 240, 240))
+    draw.text((8, 8), "BREAKING NEWS", fill=(0, 0, 0))
+    return out, "jpg", {"quality": 92}
+
+
 def t_watermark(img, rng):
     out = img.copy()
     draw = ImageDraw.Draw(out)
@@ -73,16 +109,27 @@ def t_watermark(img, rng):
 
 
 TRANSFORMS = {
-    "resize50": t_resize50,
-    "resize25": t_resize25,
+    # easy: hashes barely move
     "quality70": t_quality70,
     "quality40": t_quality40,
+    "resize50": t_resize50,
     "brightness": t_brightness,
     "contrast": t_contrast,
     "saturation": t_saturation,
     "topng": t_topng,
+    # medium
+    "resize25": t_resize25,
     "watermark": t_watermark,
+    "blur": t_blur,
+    # hard but reachable: hashes degrade to ~10, other features must decide
+    "rotate": t_rotate,
+    "overlay_large": t_overlay_large,
 }
+# t_crop15 / t_crop25 deliberately excluded from v1: measured min-hash-distance
+# of 24-30 against a random-pair baseline of 32, i.e. perceptual hashing carries
+# essentially no signal for crops. Candidate generation cannot surface them at
+# any usable radius. Retained here as the motivating evidence for the v2
+# embedding tier.
 
 
 def main():
@@ -159,7 +206,7 @@ def main():
     n_positives = len(rows)
     print(f"generated {n_positives} positive pairs")
 
-    # --- Negative images/ set: two different base images, same split
+    # Negative images/ set: two different base images, same split
     by_split = {"train": [], "val": [], "test": []}
     for p in bases:
         by_split[splits[p]].append(p)

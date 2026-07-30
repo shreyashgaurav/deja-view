@@ -1,4 +1,7 @@
 #include<cstdio> //For printf
+#include<string>
+#include <fstream>
+#include<algorithm>
 #include<dejaview/scanner.hpp> //scan_directories, ScanResult, FileEntry, ImageFormat
 #include<dejaview/version.hpp> //For versioning
 #include "dejaview/exact_dedup.hpp" //Duplicate finding : Filter 1 (Same size => FNV-1a)
@@ -6,11 +9,88 @@
 #include "dejaview/phash.hpp"
 #include "dejaview/matcher.hpp"
 #include "dejaview/features.hpp"
+#include "dejaview/export.hpp"
+#include "dejaview/model.hpp"
 #include<chrono>
 
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
     //argv[0]: program name aleways
     //argv[1...]: directory
+
+    // Subcommand dispatch. Default (no subcommand) stays "scan a directory",
+    // so existing usage is unchanged.
+    if (argc >= 4 && std::string(argv[1]) == "export-features") {
+        const std::size_t limit = (argc >= 5)
+                                      ? std::stoull(argv[4])
+                                      : 0;
+        dejaview::ExportStats stats;
+        std::string err;
+        if (!dejaview::export_features(argv[2], argv[3], limit, stats, err)) {
+            std::printf("export failed: %s\n", err.c_str());
+            return 1;
+        }
+        std::printf("pairs read:      %zu\n", stats.pairs_read);
+        std::printf("unique images:   %zu\n", stats.unique_images);
+        std::printf("images failed:   %zu\n", stats.images_failed);
+        std::printf("pairs skipped:   %zu\n", stats.pairs_skipped);
+        std::printf("pairs written:   %zu\n", stats.pairs_written);
+        return 0;
+    }
+
+
+
+    // Mine hard negatives: pairs of DIFFERENT images that the hashes think
+    // are similar. Since this directory holds only originals (no derivatives),
+    // every pair found here is a true negative by construction.
+    if (argc >= 4 && std::string(argv[1]) == "mine-negatives") {
+        const int radius = (argc >= 5) ? std::stoi(argv[4]) : 16;
+
+        const auto scan = dejaview::scan_directories({argv[2]});
+        std::printf("found %zu images in %s\n", scan.files.size(), argv[2]);
+
+        std::vector<dejaview::PerceptualHashes> hashes;
+        std::vector<std::size_t> idx;
+        for (std::size_t i = 0; i < scan.files.size(); ++i) {
+            if (i % 500 == 0) {
+                std::printf("\r  hashing %zu/%zu", i, scan.files.size());
+                std::fflush(stdout);
+            }
+            dejaview::PerceptualHashes h;
+            std::string err;
+            if (dejaview::compute_hashes(scan.files[i].path,
+                                         scan.files[i].format, h, err)) {
+                hashes.push_back(h);
+                idx.push_back(i);
+            }
+        }
+        std::printf("\r  hashed %zu images        \n", hashes.size());
+
+        dejaview::MatchOptions opts;
+        opts.ahash_radius = radius;
+        opts.dhash_radius = radius;
+        opts.phash_radius = radius;
+        opts.max_candidates_per_image = 0;   // no cap: we want every one
+
+        const auto match = dejaview::find_candidates(hashes, opts);
+
+        std::ofstream out(argv[3]);
+        if (!out) {
+            std::printf("cannot write %s\n", argv[3]);
+            return 1;
+        }
+        out << "path_a,path_b,d_ahash,d_dhash,d_phash\n";
+        for (const auto& p : match.pairs) {
+            out << scan.files[idx[p.a]].path.string() << ','
+                << scan.files[idx[p.b]].path.string() << ','
+                << p.d_ahash << ',' << p.d_dhash << ',' << p.d_phash << '\n';
+        }
+        std::printf("wrote %zu candidate hard negatives to %s\n",
+                    match.pairs.size(), argv[3]);
+        return 0;
+    }
+
+
+
     if (argc < 2) {
         std :: printf("Dejaview %s\nUsage: dejaview <directory> [More directories...]\n",
             dejaview::version());
@@ -121,15 +201,76 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
                                               }
     }
 
-    int colour_agree = 0;
-    for (const auto& p : match.pairs) {
-        const auto pf = dejaview::compute_pair_features(p, img_feats[p.a],
-                                                        img_feats[p.b]);
-        if (pf.hist_distance < 0.15f) ++colour_agree;
+    // Stage 6e:: classify candidate pairs
+    dejaview::PairClassifier clf;
+    std::string model_err;
+    const char* model_path = "training/model/weights.json";
+    const bool have_model = dejaview::load_classifier(model_path, clf, model_err);
+    if (!have_model) {
+        std::printf("\nWARNING: no classifier (%s) - falling back to a pHash "
+                    "threshold. Results will be worse.\n", model_err.c_str());
     }
-    std::printf("\nImage features computed (%zu failed)\n", feat_failed);
-    std::printf("Candidates whose colours also agree (hist < 0.15): %d / %zu\n",
-                colour_agree, match.pairs.size());
 
-    return 0;
+    // Dump every judged pair for inspection. This is how real hard negatives
+    // get found: look at what the model got wrong on data it never trained on.
+    std::ofstream dump("classified.csv");
+    dump << "probability,verdict,path_a,path_b";
+    for (const char* n : dejaview::PairFeatures::names()) dump << ',' << n;
+    dump << '\n';
+
+    int duplicates = 0, rejected = 0;
+    int bucket[10] = {0};
+    float highest = 0.0f;
+    std::size_t best_a = 0, best_b = 0;
+
+    for (const auto& pr : match.pairs) {
+        const auto pf = dejaview::compute_pair_features(pr, img_feats[pr.a],
+                                                        img_feats[pr.b]);
+        bool dup;
+        float prob = 0.0f;
+        if (have_model) {
+            prob = clf.probability(pf);
+            dup = prob >= clf.threshold;
+        } else {
+            dup = pr.d_phash <= 8;   // degraded fallback (SRS ML-I2)
+        }
+
+        bucket[std::min(9, static_cast<int>(prob * 10))]++;
+
+        // Paths are quoted: filenames can contain commas.
+        dump << prob << ',' << (dup ? 1 : 0) << ",\""
+             << result.files[hashed_index[pr.a]].path.string() << "\",\""
+             << result.files[hashed_index[pr.b]].path.string() << '"';
+        for (float v : pf.to_array()) dump << ',' << v;
+        dump << '\n';
+
+        if (dup) {
+            ++duplicates;
+            if (prob > highest) {
+                highest = prob;
+                best_a = pr.a;
+                best_b = pr.b;
+            }
+        } else {
+            ++rejected;
+        }
+    }
+
+    std::printf("\n=== Classification ===\n");
+    std::printf("  candidates:  %zu\n", match.pairs.size());
+    std::printf("  duplicates:  %d\n", duplicates);
+    std::printf("  rejected:    %d  (%.1f%% of candidates)\n", rejected,
+                match.pairs.empty() ? 0.0
+                    : 100.0 * rejected / match.pairs.size());
+
+    std::printf("\n  probability distribution:\n");
+    for (int i = 0; i < 10; ++i) {
+        std::printf("    %.1f-%.1f : %d\n", i / 10.0, (i + 1) / 10.0, bucket[i]);
+    }
+
+    if (have_model && duplicates > 0) {
+        std::printf("\n  most confident: p=%.4f\n    %s\n    %s\n", highest,
+                    result.files[hashed_index[best_a]].path.string().c_str(),
+                    result.files[hashed_index[best_b]].path.string().c_str());
+    }
 }

@@ -128,4 +128,14 @@ namespace dejaview {
         return result;
     }
 
+    bool detect_image_format(const fs::path& p, ImageFormat& out, std::string& error) {
+        bool is_image = false;
+        if (!sniff_format(p, is_image, out, error)) return false;
+        if (!is_image) {
+            error = "not a JPEG or PNG";
+            return false;
+        }
+        return true;
+    }
+
 }
