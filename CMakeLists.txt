@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(googletest json)
 add_library(dejaview_core src/version.cpp src/scanner.cpp
         src/hashing.cpp src/exact_dedup.cpp src/decoder.cpp
         src/phash.cpp src/matcher.cpp src/features.cpp
-        src/export.cpp src/model.cpp src/cluster.cpp)
+        src/export.cpp src/model.cpp src/cluster.cpp src/report.cpp)
 target_include_directories(dejaview_core PUBLIC include)
 target_link_libraries(dejaview_core PRIVATE JPEG::JPEG PNG::PNG nlohmann_json::nlohmann_json)
 
@@ -40,8 +40,10 @@ FetchContent_MakeAvailable(googletest)
 add_executable(dejaview_tests tests/version_test.cpp
         tests/scanner_test.cpp tests/exact_dedup_test.cpp
         tests/decoder_test.cpp tests/phash_test.cpp
-        tests/matcher_test.cpp tests/features_test.cpp tests/model_test.cpp tests/cluster_test.cpp)
-target_link_libraries(dejaview_tests PRIVATE dejaview_core GTest::gtest_main)
+        tests/matcher_test.cpp tests/features_test.cpp
+        tests/model_test.cpp tests/cluster_test.cpp
+        tests/report_test.cpp)
+target_link_libraries(dejaview_tests PRIVATE dejaview_core GTest::gtest_main nlohmann_json::nlohmann_json)
 target_compile_definitions(dejaview_tests PRIVATE TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/tests/data")
 include(GoogleTest)
 gtest_discover_tests(dejaview_tests)

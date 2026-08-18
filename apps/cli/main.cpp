@@ -12,6 +12,7 @@
 #include "dejaview/export.hpp"
 #include "dejaview/model.hpp"
 #include "dejaview/cluster.hpp"
+#include "dejaview/report.hpp"
 #include<chrono>
 
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
@@ -222,6 +223,7 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
     int duplicates = 0, rejected = 0;
     int bucket[10] = {0};
     std::vector<dejaview::ScoredPair> scored;
+    std::vector<dejaview::PairFeatures> scored_feats;
     float highest = 0.0f;
     std::size_t best_a = 0, best_b = 0;
 
@@ -249,6 +251,7 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
         if (dup) {
             ++duplicates;
             scored.push_back({pr.a, pr.b, prob});
+            scored_feats.push_back(pf);
             if (prob > highest) {
                 highest = prob;
                 best_a = pr.a;
@@ -305,6 +308,34 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
             std::printf("    %s %s\n", m == keep ? "KEEP  " : "      ",
                         result.files[hashed_index[m]].path.string().c_str());
         }
+    }
+
+
+
+    //Stage 8 JSON report => Wll be used by UI
+    dejaview::ReportInput ri;
+    for (int i = 1; i < argc; ++i) ri.roots.push_back(argv[i]);
+    ri.entries_visited = result.entries_visited;
+    ri.images_found = result.files.size();
+    ri.skipped_non_image = result.skipped_non_image;
+    ri.errors = result.errors;
+    ri.files = &result.files;
+    ri.hashed_index = &hashed_index;
+    ri.features = &img_feats;
+    ri.exact = &dupes;
+    ri.clusters = &clusters;
+    ri.scored_pairs = &scored;
+    ri.pair_features = &scored_feats;
+    ri.candidates = match.pairs.size();
+    ri.threshold = have_model ? clf.threshold : 0.5f;
+    ri.model_loaded = have_model;
+    for (const auto& f : result.files) ri.total_bytes += f.size_bytes;
+
+    std::string report_err;
+    if (dejaview::write_report("dejaview-report.json", ri, report_err)) {
+        std::printf("\nreport written to dejaview-report.json\n");
+    } else {
+        std::printf("\nreport failed: %s\n", report_err.c_str());
     }
 
     return 0;
