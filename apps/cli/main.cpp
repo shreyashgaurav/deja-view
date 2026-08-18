@@ -11,6 +11,7 @@
 #include "dejaview/features.hpp"
 #include "dejaview/export.hpp"
 #include "dejaview/model.hpp"
+#include "dejaview/cluster.hpp"
 #include<chrono>
 
 int main(int const argc, char** argv) { //Count of arguments, and arguments vector
@@ -220,6 +221,7 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
 
     int duplicates = 0, rejected = 0;
     int bucket[10] = {0};
+    std::vector<dejaview::ScoredPair> scored;
     float highest = 0.0f;
     std::size_t best_a = 0, best_b = 0;
 
@@ -246,6 +248,7 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
 
         if (dup) {
             ++duplicates;
+            scored.push_back({pr.a, pr.b, prob});
             if (prob > highest) {
                 highest = prob;
                 best_a = pr.a;
@@ -273,4 +276,36 @@ int main(int const argc, char** argv) { //Count of arguments, and arguments vect
                     result.files[hashed_index[best_a]].path.string().c_str(),
                     result.files[hashed_index[best_b]].path.string().c_str());
     }
+
+    // Stage 7: clustering the imagess
+    const auto clusters = dejaview::cluster_pairs(scored, hashes.size());
+
+    std::uintmax_t reclaimable = 0;
+    for (const auto& c : clusters.clusters) {
+        const std::size_t keep = dejaview::recommend_keep(c.members, img_feats);
+        for (std::size_t m : c.members) {
+            if (m != keep) reclaimable += img_feats[m].file_size;
+        }
+    }
+
+    std::printf("\nGroups\n");
+    std::printf("  duplicate groups: %zu  (from %zu pairs)\n",
+                clusters.clusters.size(), scored.size());
+    std::printf("  weak bridges refused: %zu\n", clusters.weak_merges_blocked);
+    std::printf("  reclaimable: %.1f MB\n",
+                static_cast<double>(reclaimable) / (1024.0 * 1024.0));
+
+    const std::size_t show = std::min<std::size_t>(5, clusters.clusters.size());
+    for (std::size_t i = 0; i < show; ++i) {
+        const auto& c = clusters.clusters[i];
+        const std::size_t keep = dejaview::recommend_keep(c.members, img_feats);
+        std::printf("\n  group %zu: %zu files (weakest link p=%.3f)\n",
+                    i + 1, c.members.size(), c.weakest_link);
+        for (std::size_t m : c.members) {
+            std::printf("    %s %s\n", m == keep ? "KEEP  " : "      ",
+                        result.files[hashed_index[m]].path.string().c_str());
+        }
+    }
+
+    return 0;
 }
