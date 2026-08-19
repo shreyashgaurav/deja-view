@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DejaView — duplicate image detection</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #171a21;
+            --panel-2: #1e222b;
+            --line: #2a2f3a;
+            --text: #e6e8ee;
+            --muted: #8b93a5;
+            --accent: #5eead4;
+            --warn: #fbbf24;
+            --keep: #34d399;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; background: var(--bg); color: var(--text);
+            font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 20px 80px; }
+        header h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.5px; }
+        header p.sub { margin: 0 0 4px; color: var(--muted); font-size: 16px; }
+        header p.repo { margin: 14px 0 0; font-size: 14px; }
+        header a { color: var(--accent); text-decoration: none; }
+        header a:hover { text-decoration: underline; }
+
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px; margin: 28px 0; }
+        .stat { background: var(--panel); border: 1px solid var(--line);
+            border-radius: 10px; padding: 16px 18px; }
+        .stat .n { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+        .stat .l { font-size: 12px; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.6px; margin-top: 2px; }
+
+        .controls { background: var(--panel); border: 1px solid var(--line);
+            border-radius: 10px; padding: 18px; margin-bottom: 28px; }
+        .controls label { font-size: 13px; color: var(--muted); display: block;
+            margin-bottom: 10px; }
+        .controls .val { color: var(--accent); font-weight: 600; }
+        input[type=range] { width: 100%; accent-color: var(--accent); }
+        .hint { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+        .group { background: var(--panel); border: 1px solid var(--line);
+            border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+        .group-head { display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; border-bottom: 1px solid var(--line); }
+        .group-head .title { font-weight: 600; }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 20px;
+            border: 1px solid var(--line); color: var(--muted); margin-left: 8px; }
+        .badge.exact { color: var(--accent); border-color: var(--accent); }
+
+        .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px; padding: 18px; }
+        .file { background: var(--panel-2); border: 1px solid var(--line);
+            border-radius: 8px; overflow: hidden; }
+        .file img { width: 100%; height: 130px; object-fit: cover; display: block;
+            background: #000; }
+        .file .meta { padding: 9px 10px; font-size: 12px; }
+        .file .name { color: var(--text); overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; }
+        .file .dim { color: var(--muted); font-size: 11px; margin-top: 2px; }
+        .file.keep { border-color: var(--keep); }
+        .keep-tag { font-size: 10px; color: var(--keep); font-weight: 700;
+            letter-spacing: 0.5px; }
+
+        details { border-top: 1px solid var(--line); }
+        summary { padding: 12px 18px; cursor: pointer; font-size: 13px;
+            color: var(--muted); user-select: none; }
+        summary:hover { color: var(--text); }
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px;
+            margin: 0 0 14px; }
+        th, td { text-align: left; padding: 7px 18px; border-top: 1px solid var(--line); }
+        th { color: var(--muted); font-weight: 500; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.5px; }
+        td.num { font-variant-numeric: tabular-nums; }
+        .weak { color: var(--warn); }
+
+        footer { margin-top: 50px; color: var(--muted); font-size: 13px;
+            border-top: 1px solid var(--line); padding-top: 20px; }
+        .empty { color: var(--muted); padding: 30px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <h1>DejaView</h1>
+        <p class="sub">Finds the photos you've seen before — exact and near-duplicate
+            image detection in C++20.</p>
+        <p class="repo">
+            <a href="https://github.com/shreyashgaurav/deja-view">Source on GitHub</a>
+            &nbsp;·&nbsp; <span id="scanned-note"></span>
+        </p>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="controls">
+        <label>Confidence threshold: <span class="val" id="thr-val">0.50</span></label>
+        <input type="range" id="thr" min="0" max="1" step="0.01" value="0.5">
+        <div class="hint">Every pair carries a calibrated probability, not a yes/no.
+            Drag to trade recall for precision and watch groups appear and dissolve.</div>
+    </div>
+
+    <div id="groups"></div>
+
+    <footer>
+        Scanned by the DejaView CLI; this page renders its JSON report unchanged.
+        Pipeline: content hashing → perceptual hashes (aHash/dHash/pHash) →
+        Hamming candidate matching → learned pair classifier → union-find clustering.
+    </footer>
+
+</div>
+
+<script>
+    const FEATURE_LABELS = {
+        d_ahash: "aHash distance", d_dhash: "dHash distance", d_phash: "pHash distance",
+        dim_ratio: "Dimension ratio", aspect_delta: "Aspect delta",
+        size_ratio: "File-size ratio", hist_distance: "Colour distance",
+        brightness_delta: "Brightness delta", contrast_delta: "Contrast delta"
+    };
+
+    let report = null;
+
+    function baseName(p) { return p.split("/").pop(); }
+    function stem(p) { return baseName(p).replace(/\.[^.]+$/, ""); }
+    function thumb(p) { return "thumbs/" + stem(p) + ".jpg"; }
+    function mb(b) { return (b / 1048576).toFixed(1) + " MB"; }
+
+    function groupPasses(g, thr) {
+        if (g.type === "exact") return true;            // byte-identical: always shown
+        if (!g.pairs || !g.pairs.length) return true;
+        return g.pairs.some(p => p.probability >= thr);
+    }
+
+    function render(thr) {
+        const groups = report.groups.filter(g => groupPasses(g, thr));
+
+        let reclaim = 0, files = 0;
+        groups.forEach(g => { reclaim += g.reclaimable_bytes || 0;
+            files += g.members.length; });
+
+        document.getElementById("stats").innerHTML = [
+            [report.scan_info.images_found, "images scanned"],
+            [groups.length, "duplicate groups"],
+            [files, "files involved"],
+            [mb(reclaim), "reclaimable"]
+        ].map(([n, l]) => `<div class="stat"><div class="n">${n}</div>
+                     <div class="l">${l}</div></div>`).join("");
+
+        const host = document.getElementById("groups");
+        if (!groups.length) {
+            host.innerHTML = `<div class="empty">No groups at this threshold.</div>`;
+            return;
+        }
+
+        host.innerHTML = groups.map(g => {
+            const isExact = g.type === "exact";
+            const keepPath = g.keep;
+
+            const files = g.members.map(m => {
+                const path = m.path;
+                const isKeep = m.keep === true || path === keepPath;
+                const dims = (m.width && m.height) ? `${m.width}×${m.height}` : "";
+                const size = m.bytes ? mb(m.bytes) : "";
+                return `<div class="file ${isKeep ? "keep" : ""}">
+        <img src="${thumb(path)}" alt="" loading="lazy">
+        <div class="meta">
+          <div class="name" title="${baseName(path)}">${baseName(path)}</div>
+          <div class="dim">${dims} ${size}
+            ${isKeep ? '<span class="keep-tag">KEEP</span>' : ""}</div>
+        </div></div>`;
+            }).join("");
+
+            // Evidence table: one row per pair, with the features behind the verdict.
+            let evidence = "";
+            if (g.pairs && g.pairs.length) {
+                const rows = g.pairs.filter(p => p.probability >= thr).map(p => {
+                    const f = p.features || {};
+                    const cells = Object.keys(FEATURE_LABELS)
+                        .map(k => `<td class="num">${f[k] !== undefined
+                            ? (Math.abs(f[k]) >= 1 ? f[k].toFixed(0) : f[k].toFixed(3))
+                            : "—"}</td>`).join("");
+                    return `<tr><td class="num"><strong>${p.probability.toFixed(3)}</strong></td>
+                ${cells}</tr>`;
+                }).join("");
+                const heads = Object.values(FEATURE_LABELS)
+                    .map(l => `<th>${l}</th>`).join("");
+                evidence = `<details><summary>Why the model decided this
+        (${g.pairs.length} pair${g.pairs.length > 1 ? "s" : ""})</summary>
+        <table><tr><th>Confidence</th>${heads}</tr>${rows}</table></details>`;
+            }
+
+            const weak = (g.weakest_link !== undefined && g.weakest_link < 0.9)
+                ? `<span class="badge weak">weakest link ${g.weakest_link.toFixed(2)}</span>`
+                : "";
+
+            return `<div class="group">
+      <div class="group-head">
+        <div class="title">${g.members.length} files
+          <span class="badge ${isExact ? "exact" : ""}">
+            ${isExact ? "byte-identical" : "near-duplicate"}</span>${weak}</div>
+        <div class="badge">${mb(g.reclaimable_bytes || 0)} reclaimable</div>
+      </div>
+      <div class="files">${files}</div>
+      ${evidence}
+    </div>`;
+        }).join("");
+    }
+
+    fetch("report.json")
+        .then(r => r.json())
+        .then(j => {
+            report = j;
+            const thrInput = document.getElementById("thr");
+            const initial = (j.scan_info && j.scan_info.classifier)
+                ? j.scan_info.classifier.threshold : 0.5;
+            thrInput.value = initial;
+            document.getElementById("thr-val").textContent = Number(initial).toFixed(2);
+            document.getElementById("scanned-note").textContent =
+                `${j.scan_info.images_found} images · report schema v${j.schema_version}`;
+
+            render(Number(initial));
+            thrInput.addEventListener("input", e => {
+                const v = Number(e.target.value);
+                document.getElementById("thr-val").textContent = v.toFixed(2);
+                render(v);
+            });
+        })
+        .catch(e => {
+            document.getElementById("groups").innerHTML =
+                `<div class="empty">Could not load report.json — ${e}</div>`;
+        });
+</script>
+</body>
+</html>
