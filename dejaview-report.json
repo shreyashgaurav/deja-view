@@ -1,0 +1,720 @@
+{
+  "errors": [],
+  "groups": [
+    {
+      "id": 0,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/alexander-lunyov-rLvgkl-NxMI-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 226107,
+          "format": "jpeg",
+          "height": 1560,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/1.jpg",
+          "width": 1040
+        },
+        {
+          "bytes": 226107,
+          "format": "jpeg",
+          "height": 1560,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/1_rot.jpg",
+          "width": 1040
+        },
+        {
+          "bytes": 998691,
+          "format": "jpeg",
+          "height": 3120,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/alexander-lunyov-rLvgkl-NxMI-unsplash.jpg",
+          "width": 2080
+        }
+      ],
+      "pairs": [
+        {
+          "a": 0,
+          "b": 3,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.0,
+            "contrast_delta": 0.0,
+            "d_ahash": 0.0,
+            "d_dhash": 0.0,
+            "d_phash": 0.0,
+            "dim_ratio": 1.0,
+            "hist_distance": 0.0,
+            "size_ratio": 1.0
+          },
+          "probability": 0.9999998807907104
+        },
+        {
+          "a": 0,
+          "b": 20,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.00013729918282479048,
+            "contrast_delta": 0.0010556578636169434,
+            "d_ahash": 0.0,
+            "d_dhash": 1.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.0048828125,
+            "size_ratio": 0.2264033555984497
+          },
+          "probability": 0.9999986290931702
+        },
+        {
+          "a": 3,
+          "b": 20,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.00013729918282479048,
+            "contrast_delta": 0.0010556578636169434,
+            "d_ahash": 0.0,
+            "d_dhash": 1.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.0048828125,
+            "size_ratio": 0.2264033555984497
+          },
+          "probability": 0.9999986290931702
+        }
+      ],
+      "reclaimable_bytes": 452214,
+      "type": "near",
+      "weakest_link": 0.9999986290931702
+    },
+    {
+      "id": 1,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/tim-mossholder-_Mosx4uonLE-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 468321,
+          "format": "jpeg",
+          "height": 2250,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/10.jpg",
+          "width": 1500
+        },
+        {
+          "bytes": 513354,
+          "format": "jpeg",
+          "height": 2250,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/10_flipped.jpg",
+          "width": 1500
+        },
+        {
+          "bytes": 1582090,
+          "format": "jpeg",
+          "height": 4499,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/tim-mossholder-_Mosx4uonLE-unsplash.jpg",
+          "width": 3000
+        }
+      ],
+      "pairs": [
+        {
+          "a": 1,
+          "b": 2,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.0007260789861902595,
+            "contrast_delta": 0.0004349946975708008,
+            "d_ahash": 9.0,
+            "d_dhash": 17.0,
+            "d_phash": 28.0,
+            "dim_ratio": 1.0,
+            "hist_distance": 0.017578125,
+            "size_ratio": 0.9122769236564636
+          },
+          "probability": 0.8075392842292786
+        },
+        {
+          "a": 1,
+          "b": 29,
+          "features": {
+            "aspect_delta": 0.0002222469192929566,
+            "brightness_delta": 6.438610580516979e-05,
+            "contrast_delta": 0.0001138448715209961,
+            "d_ahash": 1.0,
+            "d_dhash": 1.0,
+            "d_phash": 2.0,
+            "dim_ratio": 0.25005558133125305,
+            "hist_distance": 0.0146484375,
+            "size_ratio": 0.29601413011550903
+          },
+          "probability": 0.9999963045120239
+        }
+      ],
+      "reclaimable_bytes": 981675,
+      "type": "near",
+      "weakest_link": 0.8075392842292786
+    },
+    {
+      "id": 2,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/claudio-schwarz-7CbegtZVUHs-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 811402,
+          "format": "jpeg",
+          "height": 2184,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/2.jpg",
+          "width": 2912
+        },
+        {
+          "bytes": 611971,
+          "format": "jpeg",
+          "height": 1904,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/2_rot.jpg",
+          "width": 2539
+        },
+        {
+          "bytes": 2723424,
+          "format": "jpeg",
+          "height": 4368,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/claudio-schwarz-7CbegtZVUHs-unsplash.jpg",
+          "width": 5824
+        }
+      ],
+      "pairs": [
+        {
+          "a": 4,
+          "b": 5,
+          "features": {
+            "aspect_delta": 0.00013129389844834805,
+            "brightness_delta": 0.006714166607707739,
+            "contrast_delta": 0.00750337541103363,
+            "d_ahash": 6.0,
+            "d_dhash": 13.0,
+            "d_phash": 20.0,
+            "dim_ratio": 0.7601261138916016,
+            "hist_distance": 0.0341796875,
+            "size_ratio": 0.7542142868041992
+          },
+          "probability": 0.985388994216919
+        },
+        {
+          "a": 4,
+          "b": 21,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 9.759641397977248e-05,
+            "contrast_delta": 0.00010891258716583252,
+            "d_ahash": 0.0,
+            "d_dhash": 0.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.0068359375,
+            "size_ratio": 0.29793450236320496
+          },
+          "probability": 0.9999987483024597
+        },
+        {
+          "a": 5,
+          "b": 21,
+          "features": {
+            "aspect_delta": 0.00013129389844834805,
+            "brightness_delta": 0.006811762694269419,
+            "contrast_delta": 0.007612287998199463,
+            "d_ahash": 6.0,
+            "d_dhash": 13.0,
+            "d_phash": 20.0,
+            "dim_ratio": 0.1900315284729004,
+            "hist_distance": 0.0341796875,
+            "size_ratio": 0.2247064709663391
+          },
+          "probability": 0.9125668406486511
+        }
+      ],
+      "reclaimable_bytes": 1423373,
+      "type": "near",
+      "weakest_link": 0.985388994216919
+    },
+    {
+      "id": 3,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/fabio-sasso-T_YG9paUo5I-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 363779,
+          "format": "jpeg",
+          "height": 1000,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/4.jpg",
+          "width": 1500
+        },
+        {
+          "bytes": 372391,
+          "format": "jpeg",
+          "height": 1000,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/4_flipped.jpg",
+          "width": 1500
+        },
+        {
+          "bytes": 1246539,
+          "format": "jpeg",
+          "height": 2000,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/fabio-sasso-T_YG9paUo5I-unsplash.jpg",
+          "width": 3000
+        }
+      ],
+      "pairs": [
+        {
+          "a": 8,
+          "b": 9,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.0013520334614440799,
+            "contrast_delta": 0.0018853545188903809,
+            "d_ahash": 16.0,
+            "d_dhash": 14.0,
+            "d_phash": 32.0,
+            "dim_ratio": 1.0,
+            "hist_distance": 0.0244140625,
+            "size_ratio": 0.9768737554550171
+          },
+          "probability": 0.6619061827659607
+        },
+        {
+          "a": 8,
+          "b": 23,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 8.842617535265163e-05,
+            "contrast_delta": 0.00029337406158447266,
+            "d_ahash": 0.0,
+            "d_dhash": 0.0,
+            "d_phash": 4.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.0126953125,
+            "size_ratio": 0.29183122515678406
+          },
+          "probability": 0.9999953508377075
+        }
+      ],
+      "reclaimable_bytes": 736170,
+      "type": "near",
+      "weakest_link": 0.6619061827659607
+    },
+    {
+      "id": 4,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/marek-piwnicki-CqCvgf-_dFE-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 175998,
+          "format": "jpeg",
+          "height": 689,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/6.jpg",
+          "width": 1224
+        },
+        {
+          "bytes": 140725,
+          "format": "jpeg",
+          "height": 559,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/6_cropped.jpg",
+          "width": 994
+        },
+        {
+          "bytes": 666835,
+          "format": "jpeg",
+          "height": 1377,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/marek-piwnicki-CqCvgf-_dFE-unsplash.jpg",
+          "width": 2448
+        }
+      ],
+      "pairs": [
+        {
+          "a": 12,
+          "b": 13,
+          "features": {
+            "aspect_delta": 0.000949541456066072,
+            "brightness_delta": 0.03474797308444977,
+            "contrast_delta": 0.07640206813812256,
+            "d_ahash": 5.0,
+            "d_dhash": 14.0,
+            "d_phash": 16.0,
+            "dim_ratio": 0.6588667035102844,
+            "hist_distance": 0.146484375,
+            "size_ratio": 0.7995829582214355
+          },
+          "probability": 0.9581930637359619
+        },
+        {
+          "a": 12,
+          "b": 25,
+          "features": {
+            "aspect_delta": 0.00072595285018906,
+            "brightness_delta": 9.436513937544078e-05,
+            "contrast_delta": 0.0014306604862213135,
+            "d_ahash": 0.0,
+            "d_dhash": 3.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25018155574798584,
+            "hist_distance": 0.015625,
+            "size_ratio": 0.2639303505420685
+          },
+          "probability": 0.999996542930603
+        },
+        {
+          "a": 13,
+          "b": 25,
+          "features": {
+            "aspect_delta": 0.00022358859132509679,
+            "brightness_delta": 0.03465360775589943,
+            "contrast_delta": 0.07497140765190125,
+            "d_ahash": 5.0,
+            "d_dhash": 13.0,
+            "d_phash": 16.0,
+            "dim_ratio": 0.16483628749847412,
+            "hist_distance": 0.140625,
+            "size_ratio": 0.21103420853614807
+          },
+          "probability": 0.9055573344230652
+        }
+      ],
+      "reclaimable_bytes": 316723,
+      "type": "near",
+      "weakest_link": 0.9581930637359619
+    },
+    {
+      "id": 5,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/saleh-iU4ydxNdxy0-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 375625,
+          "format": "jpeg",
+          "height": 1008,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/8.jpg",
+          "width": 1515
+        },
+        {
+          "bytes": 214049,
+          "format": "jpeg",
+          "height": 702,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/8_cropped.jpg",
+          "width": 1055
+        },
+        {
+          "bytes": 1929983,
+          "format": "jpeg",
+          "height": 2016,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/saleh-iU4ydxNdxy0-unsplash.jpg",
+          "width": 3030
+        }
+      ],
+      "pairs": [
+        {
+          "a": 16,
+          "b": 17,
+          "features": {
+            "aspect_delta": 8.462742698611692e-05,
+            "brightness_delta": 0.050354938954114914,
+            "contrast_delta": 0.03122350573539734,
+            "d_ahash": 18.0,
+            "d_dhash": 12.0,
+            "d_phash": 16.0,
+            "dim_ratio": 0.48497170209884644,
+            "hist_distance": 0.173828125,
+            "size_ratio": 0.569847583770752
+          },
+          "probability": 0.9285898208618164
+        },
+        {
+          "a": 16,
+          "b": 27,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.0003615809546317905,
+            "contrast_delta": 0.0019122809171676636,
+            "d_ahash": 0.0,
+            "d_dhash": 0.0,
+            "d_phash": 2.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.0087890625,
+            "size_ratio": 0.19462606310844421
+          },
+          "probability": 0.999998152256012
+        },
+        {
+          "a": 17,
+          "b": 27,
+          "features": {
+            "aspect_delta": 8.462742698611692e-05,
+            "brightness_delta": 0.050716519355773926,
+            "contrast_delta": 0.033135786652565,
+            "d_ahash": 18.0,
+            "d_dhash": 12.0,
+            "d_phash": 16.0,
+            "dim_ratio": 0.12124292552471161,
+            "hist_distance": 0.1708984375,
+            "size_ratio": 0.11090719699859619
+          },
+          "probability": 0.8497089743614197
+        }
+      ],
+      "reclaimable_bytes": 589674,
+      "type": "near",
+      "weakest_link": 0.9285898208618164
+    },
+    {
+      "id": 6,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/the-metropolitan-museum-of-art-h3a2aEb0y0o-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 109514,
+          "format": "jpeg",
+          "height": 710,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/9.jpg",
+          "width": 939
+        },
+        {
+          "bytes": 114466,
+          "format": "jpeg",
+          "height": 682,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/9_cropped.jpg",
+          "width": 914
+        },
+        {
+          "bytes": 503809,
+          "format": "jpeg",
+          "height": 1419,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/the-metropolitan-museum-of-art-h3a2aEb0y0o-unsplash.jpg",
+          "width": 1878
+        }
+      ],
+      "pairs": [
+        {
+          "a": 18,
+          "b": 19,
+          "features": {
+            "aspect_delta": 0.01325040403753519,
+            "brightness_delta": 0.003997383639216423,
+            "contrast_delta": 0.0007019937038421631,
+            "d_ahash": 8.0,
+            "d_dhash": 6.0,
+            "d_phash": 10.0,
+            "dim_ratio": 0.9349892735481262,
+            "hist_distance": 0.0283203125,
+            "size_ratio": 0.9567382335662842
+          },
+          "probability": 0.9999569058418274
+        },
+        {
+          "a": 18,
+          "b": 28,
+          "features": {
+            "aspect_delta": 0.0007044734084047377,
+            "brightness_delta": 0.000644997984636575,
+            "contrast_delta": 0.000541985034942627,
+            "d_ahash": 0.0,
+            "d_dhash": 2.0,
+            "d_phash": 2.0,
+            "dim_ratio": 0.25017619132995605,
+            "hist_distance": 0.015625,
+            "size_ratio": 0.21737205982208252
+          },
+          "probability": 0.9999958872795105
+        },
+        {
+          "a": 19,
+          "b": 28,
+          "features": {
+            "aspect_delta": 0.012545931152999401,
+            "brightness_delta": 0.0033523859456181526,
+            "contrast_delta": 0.00124397873878479,
+            "d_ahash": 8.0,
+            "d_dhash": 4.0,
+            "d_phash": 8.0,
+            "dim_ratio": 0.23391205072402954,
+            "hist_distance": 0.0244140625,
+            "size_ratio": 0.2272011786699295
+          },
+          "probability": 0.9999087452888489
+        }
+      ],
+      "reclaimable_bytes": 223980,
+      "type": "near",
+      "weakest_link": 0.9999569058418274
+    },
+    {
+      "id": 7,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/diego-marin-GsPK5JFK5t8-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 553135,
+          "format": "jpeg",
+          "height": 1538,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/3.jpg",
+          "width": 1025
+        },
+        {
+          "bytes": 2269174,
+          "format": "jpeg",
+          "height": 3075,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/diego-marin-GsPK5JFK5t8-unsplash.jpg",
+          "width": 2050
+        }
+      ],
+      "pairs": [
+        {
+          "a": 6,
+          "b": 22,
+          "features": {
+            "aspect_delta": 0.0003251503803767264,
+            "brightness_delta": 0.00011477003135951236,
+            "contrast_delta": 0.00013127923011779785,
+            "d_ahash": 0.0,
+            "d_dhash": 1.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25008130073547363,
+            "hist_distance": 0.00390625,
+            "size_ratio": 0.24376051127910614
+          },
+          "probability": 0.9999985694885254
+        }
+      ],
+      "reclaimable_bytes": 553135,
+      "type": "near",
+      "weakest_link": 0.9999985694885254
+    },
+    {
+      "id": 8,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/hanna-lazar-Qig5SzMq-i4-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 198160,
+          "format": "jpeg",
+          "height": 1000,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/5.jpg",
+          "width": 750
+        },
+        {
+          "bytes": 778259,
+          "format": "jpeg",
+          "height": 2000,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/hanna-lazar-Qig5SzMq-i4-unsplash.jpg",
+          "width": 1500
+        }
+      ],
+      "pairs": [
+        {
+          "a": 10,
+          "b": 24,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 0.00015973857080098242,
+            "contrast_delta": 0.0003810971975326538,
+            "d_ahash": 0.0,
+            "d_dhash": 1.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.015625,
+            "size_ratio": 0.2546195983886719
+          },
+          "probability": 0.9999982714653015
+        }
+      ],
+      "reclaimable_bytes": 198160,
+      "type": "near",
+      "weakest_link": 0.9999982714653015
+    },
+    {
+      "id": 9,
+      "keep": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/pawel-czerwinski-tkKMInGuxk8-unsplash.jpg",
+      "keep_rule": "highest resolution, then largest file",
+      "members": [
+        {
+          "bytes": 232495,
+          "format": "jpeg",
+          "height": 1290,
+          "keep": false,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/7.jpg",
+          "width": 860
+        },
+        {
+          "bytes": 831890,
+          "format": "jpeg",
+          "height": 2580,
+          "keep": true,
+          "path": "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images/pawel-czerwinski-tkKMInGuxk8-unsplash.jpg",
+          "width": 1720
+        }
+      ],
+      "pairs": [
+        {
+          "a": 14,
+          "b": 26,
+          "features": {
+            "aspect_delta": 0.0,
+            "brightness_delta": 2.9201133656897582e-05,
+            "contrast_delta": 0.0016431361436843872,
+            "d_ahash": 1.0,
+            "d_dhash": 1.0,
+            "d_phash": 0.0,
+            "dim_ratio": 0.25,
+            "hist_distance": 0.017578125,
+            "size_ratio": 0.2794780433177948
+          },
+          "probability": 0.9999980330467224
+        }
+      ],
+      "reclaimable_bytes": 232495,
+      "type": "near",
+      "weakest_link": 0.9999980330467224
+    }
+  ],
+  "scan_info": {
+    "candidate_pairs": 37,
+    "classifier": {
+      "loaded": true,
+      "threshold": 0.5
+    },
+    "entries_visited": 30,
+    "images_found": 30,
+    "roots": [
+      "/mnt/c/Users/shrey/Desktop/testing_low_high_res_images"
+    ],
+    "skipped_non_image": 0,
+    "timings_ms": {
+      "hash_and_features": 0.0,
+      "match": 0.0,
+      "scan": 0.0
+    },
+    "total_bytes": 20102556
+  },
+  "schema_version": 1,
+  "summary": {
+    "exact_groups": 0,
+    "near_groups": 10,
+    "reclaimable_bytes": 5707599,
+    "total_groups": 10,
+    "weak_merges_blocked": 2
+  }
+}
