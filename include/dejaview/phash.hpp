@@ -16,6 +16,15 @@ namespace dejaview {
         std::uint64_t ahash = 0;  // average hash: brightness vs. mean
         std::uint64_t dhash = 0;  // difference hash: left-vs-right gradient
         std::uint64_t phash = 0;  // perceptual hash: low-frequency DCT structure
+
+        //dHash of - mirrored, rotated 90/180/270. dHash alone is enough here:
+        //it is the most reliable of the three, and carrying variants of all
+        // three would triple the storage for little extra recall. So using dhash only
+        std::uint64_t dhash_mirror = 0;
+        std::uint64_t dhash_rot90 = 0;
+        std::uint64_t dhash_rot180 = 0;
+        std::uint64_t dhash_rot270 = 0;
+
     }; //Each of these three hashes are 64-bit and each algorithm captures a different visual property.
 
     // Hashes are computed directly from an already-decoded thumbnail.
@@ -36,6 +45,11 @@ namespace dejaview {
     // Returns false with `error` set if the image can't be decoded.
     bool compute_hashes(const std::filesystem::path& p, ImageFormat format,
                         PerceptualHashes& out, std::string& error);
+
+
+    // Smallest dHash distance across every geometric variant of `a`. Equals the
+    // plain dHash distance when neither image is transformed.
+    int dhash_distance_any_orientation(const PerceptualHashes& a, const PerceptualHashes& b);
 
     // Hamming distance: number of differing bits. 0 = identical fingerprint,
     // 64 = maximally different. This is the core similarity function.

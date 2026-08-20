@@ -91,3 +91,34 @@ TEST(PHashTest, FlatImageHasDegenerateHash) {
     EXPECT_NE(ramp_d, 0u);
     EXPECT_GE(dejaview::hamming_distance(ramp_d, 0u), 4);
 }
+
+//Claude Code
+TEST(PHashTest, MirroredImageMatchesViaVariantHash) {
+    //Build a descending ramp and its mirror (which ascends).
+    Thumbnail ramp, mirrored;
+    ramp.width = 9; ramp.height = 8; ramp.pixels.resize(72);
+    mirrored.width = 9; mirrored.height = 8; mirrored.pixels.resize(72);
+    for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 9; ++x) {
+            ramp.pixels[y * 9 + x] = static_cast<std::uint8_t>((8 - x) * 30);
+            mirrored.pixels[y * 9 + x] = static_cast<std::uint8_t>(x * 30);
+        }
+    dejaview::PerceptualHashes a, b;
+    a.dhash = dejaview::dhash_from_thumbnail(ramp);
+    b.dhash = dejaview::dhash_from_thumbnail(mirrored);
+
+    //Plain distance is large: mirroring inverts the gradient direction.
+    EXPECT_GE(dejaview::hamming_distance(a.dhash, b.dhash), 40);
+
+    //With the mirror variant populated, they match.
+    a.dhash_mirror = b.dhash;
+    a.dhash_rot90 = a.dhash_rot180 = a.dhash_rot270 = a.dhash;
+    EXPECT_EQ(dejaview::dhash_distance_any_orientation(a, b), 0);
+}
+TEST(PHashTest, VariantDistanceEqualsPlainWhenNoTransform) {
+    dejaview::PerceptualHashes a, b;
+    a.dhash = a.dhash_mirror = a.dhash_rot90 = a.dhash_rot180 =
+        a.dhash_rot270 = 0xF0F0F0F0F0F0F0F0ULL;
+    b.dhash = 0xF0F0F0F0F0F0F0F0ULL;
+    EXPECT_EQ(dejaview::dhash_distance_any_orientation(a, b), 0);
+}

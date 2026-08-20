@@ -61,14 +61,20 @@ float histogram_distance(const std::array<float, kHistSize>& a,
 }
 
 std::array<float, PairFeatures::kCount> PairFeatures::to_array() const {
-    return {d_ahash, d_dhash, d_phash, dim_ratio, aspect_delta,
-            size_ratio, hist_distance, brightness_delta, contrast_delta};
+    return {d_ahash, d_dhash, d_phash, dim_ratio, aspect_delta, size_ratio, hist_distance, brightness_delta, contrast_delta, d_dhash_oriented};
 }
 
+// std::array<const char*, PairFeatures::kCount> PairFeatures::names() {
+//     return {"d_ahash", "d_dhash", "d_phash", "dim_ratio", "aspect_delta",
+//             "size_ratio", "hist_distance", "brightness_delta", "contrast_delta"};
+// }
 std::array<const char*, PairFeatures::kCount> PairFeatures::names() {
     return {"d_ahash", "d_dhash", "d_phash", "dim_ratio", "aspect_delta",
-            "size_ratio", "hist_distance", "brightness_delta", "contrast_delta"};
+            "size_ratio", "hist_distance", "brightness_delta", "contrast_delta",
+            "d_dhash_oriented"};
 }
+
+
 
 PairFeatures compute_pair_features(const CandidatePair& pair,
                                    const ImageFeatures& a,
@@ -77,6 +83,7 @@ PairFeatures compute_pair_features(const CandidatePair& pair,
     f.d_ahash = static_cast<float>(pair.d_ahash);
     f.d_dhash = static_cast<float>(pair.d_dhash);
     f.d_phash = static_cast<float>(pair.d_phash);
+    f.d_dhash_oriented = static_cast<float>(pair.d_dhash_oriented);
 
     const double px_a = std::max(1.0, double(a.width) * a.height);
     const double px_b = std::max(1.0, double(b.width) * b.height);

@@ -37,10 +37,15 @@ MatchResult find_candidates(const std::vector<PerceptualHashes>& hashes, const M
             p.d_ahash = hamming_distance(hashes[i].ahash, hashes[j].ahash);
             p.d_dhash = hamming_distance(hashes[i].dhash, hashes[j].dhash);
             p.d_phash = hamming_distance(hashes[i].phash, hashes[j].phash);
+            p.d_dhash_oriented = dhash_distance_any_orientation(hashes[i], hashes[j]);
+            //candidate generation uses the best orientation. The feature
+            //stays the plain distance, because the model was trained on it.
+            // const int d_oriented = dhash_distance_any_orientation(hashes[i], hashes[j]);
 
             const bool qualifies = p.d_ahash <= options.ahash_radius ||
-                p.d_dhash <= options.dhash_radius ||
-                    p.d_phash <= options.phash_radius;
+                                   p.d_dhash <= options.dhash_radius ||
+                                   p.d_phash <= options.phash_radius ||
+                                   p.d_dhash_oriented <= options.dhash_radius;
             if (!qualifies) continue; //nothing is in bounds
             ++result.pairs_before_cap;
             if (!capped) {

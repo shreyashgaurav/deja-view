@@ -164,7 +164,7 @@ bool export_features(const fs::path& manifest, const fs::path& out_csv,
                                       records[ib].hashes.dhash);
         cp.d_phash = hamming_distance(records[ia].hashes.phash,
                                       records[ib].hashes.phash);
-
+        cp.d_dhash_oriented = dhash_distance_any_orientation(records[ia].hashes, records[ib].hashes);
         const PairFeatures pf = compute_pair_features(
             cp, records[ia].features, records[ib].features);
 

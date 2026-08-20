@@ -71,6 +71,30 @@ const std::array<std::array<float, 32>, 32>& dct_matrix() {
     return mat;
 }
 
+Thumbnail mirror_thumbnail(const Thumbnail& t) {
+    Thumbnail out;
+    out.width = t.width;
+    out.height = t.height;
+    out.pixels.resize(t.pixels.size());
+    for (int y = 0; y < t.height; ++y)
+        for (int x = 0; x < t.width; ++x)
+            out.pixels[static_cast<std::size_t>(y) * t.width + x] = t.at(t.width - 1 - x, y);
+    return out;
+}
+
+    // Rotate 90° clockwise: (x,y) -> (height-1-y, x). Width and height swap.
+Thumbnail rotate90_thumbnail(const Thumbnail& t) {
+    Thumbnail out;
+    out.width = t.height;
+    out.height = t.width;
+    out.pixels.resize(t.pixels.size());
+    for (int y = 0; y < t.height; ++y)
+        for (int x = 0; x < t.width; ++x)
+            out.pixels[static_cast<std::size_t>(x) * out.width + (t.height - 1 - y)] = t.at(x, y);
+    return out;
+}
+
+
 }
 
 // 32x32 input. Take the 2-D DCT, keep the top-left 8x8 low-frequency block
@@ -122,15 +146,26 @@ std::uint64_t phash_from_thumbnail(const Thumbnail& t) {
 }
 
 // Coordinates the decoder and the three hash functions
-bool compute_hashes(const std::filesystem::path& p, ImageFormat format,
-                    PerceptualHashes& out, std::string& error) {
-    Thumbnail t8, t9, t32; //initally empty
+bool compute_hashes(const std::filesystem::path& p, ImageFormat format, PerceptualHashes& out, std::string& error) {
+    Thumbnail t8, t9, t32, sq;
     if (!decode_to_thumbnail(p, format, 8, 8, t8, error)) return false;
     if (!decode_to_thumbnail(p, format, 9, 8, t9, error)) return false;
     if (!decode_to_thumbnail(p, format, 32, 32, t32, error)) return false;
+    if (!decode_to_thumbnail(p, format, 9, 9, sq, error)) return false;
+
     out.ahash = ahash_from_thumbnail(t8);
     out.dhash = dhash_from_thumbnail(t9);
     out.phash = phash_from_thumbnail(t32);
+
+    // Geometric variants, all derived from one square thumbnail: no extra
+    // file I/O, just pixel shuffling in memory.
+    out.dhash_mirror = dhash_from_thumbnail(mirror_thumbnail(t9));
+    const Thumbnail r90 = rotate90_thumbnail(sq);
+    const Thumbnail r180 = rotate90_thumbnail(r90);
+    const Thumbnail r270 = rotate90_thumbnail(r180);
+    out.dhash_rot90 = dhash_from_thumbnail(r90);
+    out.dhash_rot180 = dhash_from_thumbnail(r180);
+    out.dhash_rot270 = dhash_from_thumbnail(r270);
     return true;
 }
 /*
@@ -138,4 +173,12 @@ bool compute_hashes(const std::filesystem::path& p, ImageFormat format,
  * with the three hashing algorithms (aHash, dHash, and pHash) and packages the results into
  * a single PerceptualHashes structure.
 */
+
+int dhash_distance_any_orientation(const PerceptualHashes& a, const PerceptualHashes& b) {
+    return std::min({hamming_distance(a.dhash, b.dhash),
+                     hamming_distance(a.dhash_mirror, b.dhash),
+                     hamming_distance(a.dhash_rot90, b.dhash),
+                     hamming_distance(a.dhash_rot180, b.dhash),
+                     hamming_distance(a.dhash_rot270, b.dhash)});
+}
 }  // namespace dejaview

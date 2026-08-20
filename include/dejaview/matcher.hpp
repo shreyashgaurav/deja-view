@@ -19,7 +19,7 @@ namespace dejaview {
         int d_ahash = 0; //Stores hamming distance between average, dHash dist and pHash dist
         int d_dhash = 0;
         int d_phash = 0;
-
+        int d_dhash_oriented = 0; // min dHash distance across orientations
         // How close on the best-agreeing hash - used for ranking under the cap.
         int best_distance() const {
             return std::min({d_ahash, d_dhash, d_phash});

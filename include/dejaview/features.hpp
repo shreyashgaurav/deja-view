@@ -47,8 +47,10 @@ struct PairFeatures {
     float hist_distance = 0; // 0..1
     float brightness_delta = 0; // 0..1
     float contrast_delta = 0; // 0..1
+    float d_dhash_oriented = 0;   // appended: min distance across orientations
 
-    static constexpr std::size_t kCount = 9;
+
+    static constexpr std::size_t kCount = 10;
     std::array<float, kCount> to_array() const;
     static std::array<const char*, kCount> names();
 };

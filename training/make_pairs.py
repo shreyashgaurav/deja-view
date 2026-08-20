@@ -107,6 +107,8 @@ def t_watermark(img, rng):
     draw.text((4, h - bar_h + 2), "shared", fill=(255, 255, 255))
     return out, "jpg", {"quality": 92}
 
+def t_flip(img, rng):
+    return img.transpose(Image.FLIP_LEFT_RIGHT), "jpg", {"quality": 92}
 
 TRANSFORMS = {
     # easy: hashes barely move
@@ -124,6 +126,7 @@ TRANSFORMS = {
     # hard but reachable: hashes degrade to ~10, other features must decide
     "rotate": t_rotate,
     "overlay_large": t_overlay_large,
+    "flip": t_flip,
 }
 # t_crop15 / t_crop25 deliberately excluded from v1: measured min-hash-distance
 # of 24-30 against a random-pair baseline of 32, i.e. perceptual hashing carries

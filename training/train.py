@@ -25,9 +25,12 @@ from sklearn.metrics import (average_precision_score, brier_score_loss,
                              precision_score, recall_score, f1_score)
 from sklearn.preprocessing import StandardScaler
 
-FEATURES = ["d_ahash", "d_dhash", "d_phash", "dim_ratio", "aspect_delta",
-            "size_ratio", "hist_distance", "brightness_delta", "contrast_delta"]
+# FEATURES = ["d_ahash", "d_dhash", "d_phash", "dim_ratio", "aspect_delta",
+#             "size_ratio", "hist_distance", "brightness_delta", "contrast_delta"]
 
+FEATURES = ["d_ahash", "d_dhash", "d_phash", "dim_ratio", "aspect_delta",
+      "size_ratio", "hist_distance", "brightness_delta", "contrast_delta",
+            "d_dhash_oriented"]
 
 def single_hash_baseline(df_test, df_val):
     """The approach every existing tool uses: one hash, one threshold.
