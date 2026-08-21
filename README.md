@@ -111,6 +111,11 @@ discards as much as it cheaply can. On a 633-image library that means 200,028
 possible pairs → 10,108 candidates (hash radius) → 1,653 accepted (classifier)
 → 116 groups (clustering).
 
+
+<img width="1219" height="1011" alt="image" src="https://github.com/user-attachments/assets/e39da2ff-36f4-428a-9eb6-ecb89cf2d44b" />
+
+
+
 | Stage | What it does | Notes |
 |---|---|---|
 | **Scan** | Recursive walk, magic-byte format detection | Extension mismatches flagged; errors are data, never crashes |
